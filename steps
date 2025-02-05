@@ -1,0 +1,16 @@
+- Initial Inspection
+    - Helps us to just preview the data and understand the data types of the columns
+
+- Data Cleaning
+    - Helps us to clean the data by removing duplicates, handling missing values, etc
+
+- Univariate Analysis(It involves using chart visualization)
+    - Helps us to understand the distribution of the data in each column, basically
+       we shall be able to detect the anomalies or patterns in the data
+
+- Bivariate / Multivariate Analysis(It also involves using chart visualization)
+    - Helps us to understand the relationship between two variables
+    - We can use heatmaps, pairplots, etc
+
+- Advanced Visualizations
+    - We can use a violin plot, etc
