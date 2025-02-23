@@ -1,0 +1,3 @@
+./Model_Training/models/*.pth
+*.pth
+*.pkl
