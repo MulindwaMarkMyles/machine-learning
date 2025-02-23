@@ -47,7 +47,7 @@ def load_model_and_scaler():
     """Load model and scaler with caching"""
     try:
         # Load model configuration
-        model_config = joblib.load("./models/model_config.pkl")
+        model_config = joblib.load("./models/model_one_config.pkl")
         input_dim = model_config['input_dim']
         embed_dim = model_config['embed_dim']
         max_rows = model_config['max_rows']
@@ -57,13 +57,13 @@ def load_model_and_scaler():
         
         # Try loading best model first, fall back to final model
         try:
-            model.load_state_dict(torch.load("./models/best_model_three.pth", map_location="cpu"))
+            model.load_state_dict(torch.load("./models/best_model_one.pth", map_location="cpu"))
             model_type = "best"
         except:
-            model.load_state_dict(torch.load("./models/final_model_three.pth", map_location="cpu"))
+            model.load_state_dict(torch.load("./models/final_model_one.pth", map_location="cpu"))
             model_type = "final"
             
-        scaler = joblib.load("./models/model_three_scaler.pkl")
+        scaler = joblib.load("./models/model_one_scaler.pkl")
         model.eval()
         return model, scaler, model_type, max_rows, num_features
     except Exception as e:

@@ -12,49 +12,18 @@ from scipy.stats import spearmanr
 import shap
 import torch.nn as nn
 
-def load_model_and_scaler(model_path, config_path, scaler_path, device='cpu'):
-    """Load the trained model, configuration, and scaler"""
+def load_model(model_path, config_path, device='cpu'):
+    """Load the trained model and its configuration"""
     try:
-        # Load the config first
         config = joblib.load(config_path)
-        
-        # Load the scaler
-        scaler = joblib.load(scaler_path)
-        print("Loaded scaler successfully")
-        
-        # Load the state dict to check its architecture
-        state_dict = torch.load(model_path, map_location=device, weights_only=False)
-        
-        # Determine the embedding dimension from the state dict
-        features_weight = state_dict['features.0.weight']
-        embed_dim = features_weight.size(0)  # First dimension of the first layer's weight
-        print(f"Detected embedding dimension from saved model: {embed_dim}")
-        
-        # Update config with the correct embedding dimension
-        config['embed_dim'] = embed_dim
-        print(f"Updated config with embed_dim: {embed_dim}")
-        
-        # Create model with matching architecture
-        model = EEGNet(
-            input_dim=config['input_dim'],
-            embed_dim=embed_dim,  # Use the detected dimension
-            architecture_type='light' if embed_dim == 64 else 'standard' if embed_dim == 128 else 'deep' if embed_dim == 256 else 'mini'
-        )
-        
-        # Load the state dict
-        try:
-            model.load_state_dict(state_dict)
-            print("Model loaded successfully with exact architecture match")
-        except Exception as e:
-            print(f"Warning: Could not load state dict directly: {e}")
-            print("Attempting to load with strict=False...")
-            model.load_state_dict(state_dict, strict=False)
-            
+        model = EEGNet(input_dim=config['input_dim'], embed_dim=config['embed_dim'])
+        # Use weights_only=True for security
+        model.load_state_dict(torch.load(model_path, map_location=device, weights_only=False))
         model.to(device)
         model.eval()
-        return model, config, scaler
+        return model, config
     except Exception as e:
-        print(f"Error loading model or scaler: {e}")
+        print(f"Error loading model: {e}")
         raise
 
 def evaluate_model(model, test_loader, device, config):
@@ -392,33 +361,19 @@ def main():
     
     try:
         # Load model and configuration
-        model_path = "./models/best_model_ten.pth"
-        config_path = "./models/model_config_ten.pkl"
-        scaler_path = "./models/model_scaler_ten.pkl"
+        model_path = "./models/best_model_three.pth"
+        config_path = "./models/model_config_three.pkl"
+        model, config = load_model(model_path, config_path, device)
         
-        # First, examine the saved model's architecture
-        state_dict = torch.load(model_path, map_location=device, weights_only=False)
-        features_weight = state_dict['features.0.weight']
-        embed_dim = features_weight.size(0)
-        print(f"\nSaved model architecture:")
-        print(f"Embedding dimension: {embed_dim}")
-        print(f"Input dimension: {features_weight.size(1)}")
+        # Print model configuration
+        print("\nModel Configuration:")
+        print(f"Input dimension: {config['input_dim']}")
+        print(f"Embedding dimension: {config['embed_dim']}")
         
-        model, config, scaler = load_model_and_scaler(model_path, config_path, scaler_path, device)
-        
-        # Print model structure for debugging
-        print("\nLoaded model structure:")
-        print(model)
-        
-        # Create test dataset with the loaded scaler
-        adhd_folder = "../ADHD_part1/ADHD_part1"
-        control_folder = "../Control_part1/Control_part1"
+        # Create test dataset
+        adhd_folder = "../ADHD_part2/ADHD_part2"
+        control_folder = "../Control_part2/Control_part2"
         test_dataset = MATDataset(adhd_folder, control_folder)
-        
-        # Replace the dataset's scaler with the loaded one
-        test_dataset.scaler = scaler
-        test_dataset.fitted_scaler = True
-        
         test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
         
         # Print dataset information
@@ -546,11 +501,7 @@ def generate_html_report(results, config):
         <h1>Model Evaluation Report</h1>
         <div class="metric">
             <h2>Model Configuration</h2>
-            <pre>
-Input dimension: {config['input_dim']}
-Embedding dimension: {config['embed_dim']}
-Architecture type: {config.get('architecture_type', 'standard')}
-            </pre>
+            <pre>{config}</pre>
         </div>
         <div class="metric">
             <h2>Performance Metrics</h2>

@@ -1,0 +1,35 @@
+
+    <html>
+    <head>
+        <title>Model Evaluation Report</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .metric { margin: 10px 0; }
+            img { max-width: 100%; margin: 20px 0; }
+        </style>
+    </head>
+    <body>
+        <h1>Model Evaluation Report</h1>
+        <div class="metric">
+            <h2>Model Configuration</h2>
+            <pre>
+Input dimension: 741570
+Embedding dimension: 128
+Architecture type: standard
+            </pre>
+        </div>
+        <div class="metric">
+            <h2>Performance Metrics</h2>
+            <img src="detailed_confusion_matrix.png" alt="Confusion Matrix">
+            <img src="roc_curve.png" alt="ROC Curve">
+            <img src="precision_recall_curve.png" alt="Precision-Recall Curve">
+        </div>
+        <div class="metric">
+            <h2>Feature Analysis</h2>
+            <img src="feature_importance.png" alt="Feature Importance">
+            <img src="feature_correlations.png" alt="Feature Correlations">
+            <img src="shap_summary.png" alt="SHAP Summary">
+        </div>
+    </body>
+    </html>
+    

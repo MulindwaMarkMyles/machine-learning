@@ -5,9 +5,11 @@ from torch.utils.data import Dataset, DataLoader, random_split
 from scipy.io import loadmat
 import torch.nn as nn
 import torch.optim as optim
+import torch_directml
 from sklearn.preprocessing import StandardScaler, RobustScaler
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import joblib
+import random
 
 class MATDataset(Dataset):
     def __init__(self, adhd_folder, control_folder, max_rows=None, transform=None):
@@ -94,33 +96,113 @@ class DataAugmentation:
         return data
 
 class EEGNet(nn.Module):
-    def __init__(self, input_dim, embed_dim):
+    def __init__(self, input_dim, embed_dim, architecture_type='standard'):
         super(EEGNet, self).__init__()
         
-        self.features = nn.Sequential(
-            nn.Linear(input_dim, embed_dim),
-            nn.LayerNorm(embed_dim),
-            nn.ReLU(),
-            nn.Dropout(0.3),
+        if architecture_type == 'light' or architecture_type == 'mini':
+            # Light architecture remains the same
+            self.features = nn.Sequential(
+                nn.Linear(input_dim, embed_dim),
+                nn.ReLU(),
+                nn.Dropout(0.2),
+                nn.Linear(embed_dim, embed_dim),
+                nn.ReLU(),
+                nn.Dropout(0.2)
+            )
             
-            nn.Linear(embed_dim, embed_dim * 2),
-            nn.LayerNorm(embed_dim * 2),
-            nn.ReLU(),
-            nn.Dropout(0.3),
+            self.classifier = nn.Sequential(
+                nn.Linear(embed_dim, 1),
+                nn.Sigmoid()
+            )
+
+        elif architecture_type == 'deep':
+            # Deeper architecture with more layers
+            self.features = nn.Sequential(
+                # Initial dimension reduction
+                nn.Linear(input_dim, embed_dim),
+                nn.LayerNorm(embed_dim),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                
+                # Expansion path
+                nn.Linear(embed_dim, embed_dim * 2),
+                nn.LayerNorm(embed_dim * 2),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                
+                nn.Linear(embed_dim * 2, embed_dim * 4),
+                nn.LayerNorm(embed_dim * 4),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                
+                nn.Linear(embed_dim * 4, embed_dim * 8),
+                nn.LayerNorm(embed_dim * 8),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                
+                # Reduction path with skip connections
+                nn.Linear(embed_dim * 8, embed_dim * 4),
+                nn.LayerNorm(embed_dim * 4),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                
+                nn.Linear(embed_dim * 4, embed_dim * 2),
+                nn.LayerNorm(embed_dim * 2),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                
+                nn.Linear(embed_dim * 2, embed_dim),
+                nn.LayerNorm(embed_dim),
+                nn.ReLU(),
+            )
             
-            nn.Linear(embed_dim * 2, embed_dim),
-            nn.LayerNorm(embed_dim),
-            nn.ReLU(),
-            nn.Dropout(0.3)
-        )
-        
-        self.classifier = nn.Sequential(
-            nn.Linear(embed_dim, embed_dim // 2),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(embed_dim // 2, 1),
-            nn.Sigmoid()
-        )
+            self.classifier = nn.Sequential(
+                nn.Linear(embed_dim, embed_dim // 2),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                nn.Linear(embed_dim // 2, embed_dim // 4),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                nn.Linear(embed_dim // 4, 1),
+                nn.Sigmoid()
+            )
+
+        else:  # standard
+            # Standard architecture with moderate depth
+            self.features = nn.Sequential(
+                nn.Linear(input_dim, embed_dim),
+                nn.LayerNorm(embed_dim),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                
+                nn.Linear(embed_dim, embed_dim * 2),
+                nn.LayerNorm(embed_dim * 2),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                
+                nn.Linear(embed_dim * 2, embed_dim * 4),
+                nn.LayerNorm(embed_dim * 4),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                
+                nn.Linear(embed_dim * 4, embed_dim * 2),
+                nn.LayerNorm(embed_dim * 2),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                
+                nn.Linear(embed_dim * 2, embed_dim),
+                nn.LayerNorm(embed_dim),
+                nn.ReLU(),
+                nn.Dropout(0.3)
+            )
+            
+            self.classifier = nn.Sequential(
+                nn.Linear(embed_dim, embed_dim // 2),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                nn.Linear(embed_dim // 2, 1),
+                nn.Sigmoid()
+            )
 
     def forward(self, x):
         x = x.view(x.size(0), -1)
@@ -180,8 +262,9 @@ def validate(model, dataloader, criterion, device):
 
 if __name__ == "__main__":
     # Set random seeds for reproducibility
-    torch.manual_seed(42)
-    np.random.seed(42)
+    # torch.manual_seed(42)
+    # np.random.seed(42)
+    # random.seed(42)
     
     # Define paths
     adhd_folder = "../ADHD_part2/ADHD_part2"
@@ -211,39 +294,89 @@ if __name__ == "__main__":
         'max_rows': dataset.max_rows,
         'num_features': dataset[0][0].shape[1]
     }
-    joblib.dump(model_config, "./models/model_config.pkl")
+    joblib.dump(model_config, "./models/model_config_input_dimension_ten.pkl")
     
-    teacher_model = EEGNet(input_dim, embed_dim=256)
-    student_model = EEGNet(input_dim, embed_dim=128)
+    # Initialize models with random architecture selection
+    architecture_configs = {
+        'mini': {'embed_dim': 32, 'lr': 0.004, 'optimizer': optim.Adam, 'weight_decay': 0.0},
+        'light': {'embed_dim': 64, 'lr': 0.002, 'optimizer': optim.Adam, 'weight_decay': 0.0},
+        'standard': {'embed_dim': 128, 'lr': 0.001, 'optimizer': optim.AdamW, 'weight_decay': 0.01},
+        'deep': {'embed_dim': 256, 'lr': 0.0005, 'optimizer': optim.AdamW, 'weight_decay': 0.02}
+    }
 
-    # Initialize optimizer and scheduler
-    optimizer = optim.AdamW(student_model.parameters(), lr=0.001, weight_decay=0.01)
+    # Randomly select architecture type for both teacher and student
+    # rng = np.random.default_rng()
+    # teachers = rng.integers(0,1)
+    # students = rng.integers(0,2)
+    # print(teachers)
+    # print(students)
+    teacher_arch = ['standard', 'deep'][0] # Teacher should be at least standard
+    student_arch = ['light', 'deep', 'standard', 'mini'][2]
+    
+    print(f"Selected architectures - Teacher: {teacher_arch}, Student: {student_arch}")
+
+    # Initialize models with selected architectures
+    teacher_config = architecture_configs[teacher_arch]
+    student_config = architecture_configs[student_arch]
+
+    teacher_model = EEGNet(
+        input_dim=input_dim,
+        embed_dim=teacher_config['embed_dim'],
+        architecture_type=teacher_arch
+    )
+    
+    student_model = EEGNet(
+        input_dim=input_dim,
+        embed_dim=student_config['embed_dim'],
+        architecture_type=student_arch
+    )
+
+    # Initialize optimizer with selected configuration
+    optimizer = student_config['optimizer'](
+        student_model.parameters(),
+        lr=student_config['lr'],
+        weight_decay=student_config['weight_decay']
+    )
+    
+    num_epochs = 50
+    
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
     criterion = nn.BCELoss()
 
+    # Save configuration for inference
+    model_config = {
+        'input_dim': input_dim,
+        'embed_dim': student_config['embed_dim'],
+        'architecture_type': student_arch,
+        'max_rows': dataset.max_rows,
+        'num_features': dataset[0][0].shape[1]
+    }
+    joblib.dump(model_config, "./models/model_config_ten.pkl")
+
     # Move to device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch_directml.device() if torch_directml.is_available() else torch.device("cuda" if torch.cuda.is_available() else "cpu")
     teacher_model.to(device)
     student_model.to(device)
 
     # Training loop
-    num_epochs = 100
-    best_val_acc = 0.0  # Track best validation accuracy
+    best_val_acc = 0.0
     
     for epoch in range(num_epochs):
-        # Training phase
-        train_loss, train_acc = train_epoch(student_model, teacher_model, train_loader, optimizer, device, criterion)
+        train_loss, train_acc = train_epoch(
+            student_model,
+            teacher_model,
+            train_loader,
+            optimizer,
+            device,
+            criterion
+        )
         
-        # Validation phase
         val_loss, val_acc = validate(student_model, val_loader, criterion, device)
-        
-        # Update learning rate
         scheduler.step(val_loss)
         
-        # Save model if it achieves better validation accuracy
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            torch.save(student_model.state_dict(), "./models/best_model_three.pth")
+            torch.save(student_model.state_dict(), "./models/best_model_ten.pth")
             print(f"New best model saved with validation accuracy: {val_acc:.4f}")
         
         print(f"Epoch {epoch+1}/{num_epochs}")
@@ -251,6 +384,9 @@ if __name__ == "__main__":
         print(f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
 
     # Save final model and scaler
-    torch.save(student_model.state_dict(), "./models/final_model_three.pth")
-    joblib.dump(dataset.scaler, "./models/model_three_scaler.pkl")
-    print(f"Training complete. Final model saved. Best validation accuracy was: {best_val_acc:.4f}")
+    torch.save(student_model.state_dict(), "./models/final_model_ten.pth")
+    joblib.dump(dataset.scaler, "./models/model_scaler_ten.pkl")
+    
+    print(f"Training complete. Final model saved.")
+    print(f"Architecture type: {student_arch}")
+    print(f"Best validation accuracy: {best_val_acc:.4f}")
