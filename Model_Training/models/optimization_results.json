@@ -1,0 +1,111 @@
+{
+    "linear": {
+        "best_params": {
+            "batch_size": 103,
+            "lr": 8.219435335891393e-05,
+            "dropout": 0.1226821525523869,
+            "embed_dim": 320,
+            "weight_decay": 0.0003042368754923691,
+            "n_epochs": 46,
+            "clip_value": 1.6616054826199191
+        },
+        "best_score": 0.8888888888888888
+    },
+    "logistic": {
+        "best_params": {
+            "batch_size": 128,
+            "lr": 7.42386076106983e-05,
+            "dropout": 0.3998655789258999,
+            "embed_dim": 128,
+            "weight_decay": 0.0023492316336220327,
+            "n_epochs": 33,
+            "clip_value": 0.5600477855426319
+        },
+        "best_score": 0.6666666666666666
+    },
+    "tree": {
+        "best_params": {
+            "batch_size": 82,
+            "lr": 1.606525027488219e-05,
+            "dropout": 0.3047139782609002,
+            "embed_dim": 128,
+            "weight_decay": 0.001962971793882986,
+            "n_epochs": 42,
+            "clip_value": 3.7946204560983405
+        },
+        "best_score": 0.8888888888888888
+    },
+    "svm": {
+        "best_params": {
+            "batch_size": 105,
+            "lr": 0.00019244380081200963,
+            "dropout": 0.420916265711726,
+            "embed_dim": 384,
+            "weight_decay": 0.0045050967534267785,
+            "n_epochs": 43,
+            "clip_value": 3.811307987436614
+        },
+        "best_score": 0.8888888888888888
+    },
+    "knn": {
+        "best_params": {
+            "batch_size": 110,
+            "lr": 0.02111510834444606,
+            "dropout": 0.30394186528292,
+            "embed_dim": 320,
+            "weight_decay": 0.0077048386567902605,
+            "n_epochs": 50,
+            "clip_value": 0.7545109275105178
+        },
+        "best_score": 0.5555555555555556
+    },
+    "gbm": {
+        "best_params": {
+            "batch_size": 74,
+            "lr": 0.0003102911313067045,
+            "dropout": 0.2727918318433056,
+            "embed_dim": 64,
+            "weight_decay": 0.0006601115443977804,
+            "n_epochs": 10,
+            "clip_value": 3.958952548851128
+        },
+        "best_score": 0.7777777777777778
+    },
+    "xgboost": {
+        "best_params": {
+            "batch_size": 42,
+            "lr": 0.040383748293303524,
+            "dropout": 0.2700199408896169,
+            "embed_dim": 192,
+            "weight_decay": 0.0003873065234372479,
+            "n_epochs": 20,
+            "clip_value": 2.2019149940834986
+        },
+        "best_score": 0.6666666666666666
+    },
+    "neural": {
+        "best_params": {
+            "batch_size": 28,
+            "lr": 0.003755048705714485,
+            "dropout": 0.44195135585678924,
+            "embed_dim": 256,
+            "weight_decay": 0.0002992098591960922,
+            "n_epochs": 50,
+            "clip_value": 2.517632626896684
+        },
+        "best_score": 0.6666666666666666
+    },
+    "pca": {
+        "best_params": {
+            "batch_size": 118,
+            "lr": 0.0003745972247917537,
+            "dropout": 0.4451826159586263,
+            "embed_dim": 128,
+            "n_components": 64,
+            "weight_decay": 1.4914335658925064e-05,
+            "n_epochs": 16,
+            "clip_value": 1.0206215606470632
+        },
+        "best_score": 0.7777777777777778
+    }
+}
