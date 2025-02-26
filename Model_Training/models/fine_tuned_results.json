@@ -1,100 +1,100 @@
 {
     "linear": {
         "original_score": 0.8888888888888888,
-        "fine_tuned_score": 0.9166666666666666,
-        "improvement": 0.02777777777777779,
+        "fine_tuned_score": 0.8333333333333334,
+        "improvement": -0.05555555555555547,
         "best_params": {
-            "batch_size": 111,
-            "lr": 8.47646480238461e-05,
-            "dropout": 0.15686154868357854,
-            "embed_dim": 384,
-            "weight_decay": 0.0004293766890144095,
-            "n_epochs": 47,
-            "clip_value": 1.7176960305453746
+            "batch_size": 104,
+            "lr": 0.00010648418562034908,
+            "dropout": 0.1667915281929765,
+            "embed_dim": 320,
+            "weight_decay": 0.0002466326808241469,
+            "n_epochs": 51,
+            "clip_value": 1.8180925095700093
         }
     },
     "logistic": {
         "original_score": 0.6666666666666666,
-        "fine_tuned_score": 0.9166666666666666,
-        "improvement": 0.25,
+        "fine_tuned_score": 0.75,
+        "improvement": 0.08333333333333337,
         "best_params": {
-            "batch_size": 148,
-            "lr": 8.456433023449665e-05,
-            "dropout": 0.3413227697621524,
-            "embed_dim": 134,
-            "weight_decay": 0.0014318704676330397,
-            "n_epochs": 37,
-            "clip_value": 0.5367361595187391
+            "batch_size": 151,
+            "lr": 5.1694430540962836e-05,
+            "dropout": 0.3876009649004486,
+            "embed_dim": 102,
+            "weight_decay": 0.001323175913668073,
+            "n_epochs": 31,
+            "clip_value": 0.610443730716859
         }
     },
     "tree": {
         "original_score": 0.8888888888888888,
-        "fine_tuned_score": 0.6666666666666666,
-        "improvement": -0.2222222222222222,
+        "fine_tuned_score": 0.8333333333333334,
+        "improvement": -0.05555555555555547,
         "best_params": {
-            "batch_size": 82,
-            "lr": 9.973123848745117e-06,
-            "dropout": 0.35708877005182826,
+            "batch_size": 98,
+            "lr": 1.1194610785811346e-05,
+            "dropout": 0.32388525074780594,
             "embed_dim": 102,
-            "weight_decay": 0.0016271547769639765,
-            "n_epochs": 37,
-            "clip_value": 4.319642132950245
+            "weight_decay": 0.001398110641940149,
+            "n_epochs": 41,
+            "clip_value": 3.9886931853741427
         }
     },
     "svm": {
         "original_score": 0.8888888888888888,
-        "fine_tuned_score": 0.6666666666666666,
-        "improvement": -0.2222222222222222,
+        "fine_tuned_score": 0.8333333333333334,
+        "improvement": -0.05555555555555547,
         "best_params": {
-            "batch_size": 112,
-            "lr": 0.0001905408756581711,
-            "dropout": 0.33693684089095494,
-            "embed_dim": 307,
-            "weight_decay": 0.0022530613964742694,
-            "n_epochs": 46,
-            "clip_value": 3.7598728856760535
+            "batch_size": 114,
+            "lr": 0.0002037046877064713,
+            "dropout": 0.3834752868502562,
+            "embed_dim": 371,
+            "weight_decay": 0.0029541755406060238,
+            "n_epochs": 47,
+            "clip_value": 3.720759251475605
         }
     },
     "knn": {
         "original_score": 0.5555555555555556,
-        "fine_tuned_score": 0.3333333333333333,
-        "improvement": -0.22222222222222227,
+        "fine_tuned_score": 0.5833333333333334,
+        "improvement": 0.02777777777777779,
         "best_params": {
-            "batch_size": 90,
-            "lr": 0.011367435457257127,
-            "dropout": 0.34477482342061344,
-            "embed_dim": 352,
-            "weight_decay": 0.005548077040165112,
-            "n_epochs": 55,
-            "clip_value": 0.6074326714961528
+            "batch_size": 115,
+            "lr": 0.018602978847960028,
+            "dropout": 0.3347877430797293,
+            "embed_dim": 256,
+            "weight_decay": 0.008770516996312967,
+            "n_epochs": 53,
+            "clip_value": 0.7128908302478287
         }
     },
     "gbm": {
         "original_score": 0.7777777777777778,
-        "fine_tuned_score": 0.75,
-        "improvement": -0.02777777777777779,
+        "fine_tuned_score": 0.6666666666666666,
+        "improvement": -0.11111111111111116,
         "best_params": {
-            "batch_size": 83,
-            "lr": 0.00045089801325199453,
-            "dropout": 0.35893779769519374,
+            "batch_size": 70,
+            "lr": 0.0004175721222989702,
+            "dropout": 0.25670371949617454,
             "embed_dim": 51,
-            "weight_decay": 0.0007129765779850635,
-            "n_epochs": 13,
-            "clip_value": 4.245628098354569
+            "weight_decay": 0.0004031802953788868,
+            "n_epochs": 12,
+            "clip_value": 4.582221442665526
         }
     },
     "xgboost": {
         "original_score": 0.6666666666666666,
-        "fine_tuned_score": 0.25,
-        "improvement": -0.41666666666666663,
+        "fine_tuned_score": 0.5833333333333334,
+        "improvement": -0.08333333333333326,
         "best_params": {
-            "batch_size": 34,
-            "lr": 0.029645935621590833,
-            "dropout": 0.21936795725098338,
-            "embed_dim": 217,
-            "weight_decay": 0.0003394739720765119,
+            "batch_size": 49,
+            "lr": 0.04318286872807526,
+            "dropout": 0.1992830584182314,
+            "embed_dim": 185,
+            "weight_decay": 0.00040940090918471734,
             "n_epochs": 25,
-            "clip_value": 1.8325719454499574
+            "clip_value": 1.88860510615955
         }
     },
     "neural": {
@@ -102,27 +102,27 @@
         "fine_tuned_score": 0.6666666666666666,
         "improvement": 0.0,
         "best_params": {
-            "batch_size": 25,
-            "lr": 0.005459556696407094,
-            "dropout": 0.418788057443416,
-            "embed_dim": 268,
-            "weight_decay": 0.0003949740284782148,
-            "n_epochs": 52,
-            "clip_value": 2.129303312131756
+            "batch_size": 30,
+            "lr": 0.0023589544726722806,
+            "dropout": 0.37803135041970987,
+            "embed_dim": 204,
+            "weight_decay": 0.00018853979368690233,
+            "n_epochs": 55,
+            "clip_value": 2.488364360727402
         }
     },
     "pca": {
         "original_score": 0.7777777777777778,
-        "fine_tuned_score": 0.9166666666666666,
-        "improvement": 0.13888888888888884,
+        "fine_tuned_score": 0.8333333333333334,
+        "improvement": 0.05555555555555558,
         "best_params": {
-            "batch_size": 97,
-            "lr": 0.00022584730500789272,
-            "dropout": 0.418760673280831,
-            "embed_dim": 134,
-            "weight_decay": 1.2015347540810249e-05,
-            "n_epochs": 17,
-            "clip_value": 0.9548224712619601,
+            "batch_size": 120,
+            "lr": 0.0004668991441021016,
+            "dropout": 0.465489860974919,
+            "embed_dim": 102,
+            "weight_decay": 1.3839869033079237e-05,
+            "n_epochs": 16,
+            "clip_value": 1.1108184435092943,
             "n_components": 51
         }
     }

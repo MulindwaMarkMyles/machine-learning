@@ -1,0 +1,8 @@
+flask
+waitress
+torch
+numpy
+scipy
+scikit-learn
+joblib
+Werkzeug

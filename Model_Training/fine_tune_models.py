@@ -71,11 +71,9 @@ class ModelFineTuner:
         
         return params
 
-    def objective(self, trial):
-        params = self.create_search_space(trial)
-        
-        # Create model
-        input_dim = self.dataset[0][0].shape[1] * self.dataset[0][0].shape[0]
+    def create_model(self, input_dim):
+        """Create and return the appropriate model based on model_name"""
+        params = self.base_params
         
         if self.model_name == 'pca':
             model = PCANet(input_dim, params['embed_dim'], params['n_components'])
@@ -93,6 +91,15 @@ class ModelFineTuner:
             model = model_classes[self.model_name](input_dim, params['embed_dim'])
         
         model = model.to(self.device)
+        return model
+
+    def objective(self, trial):
+        params = self.create_search_space(trial)
+        
+        # Create model
+        input_dim = self.dataset[0][0].shape[1] * self.dataset[0][0].shape[0]
+        
+        model = self.create_model(input_dim)
         
         # Training setup
         criterion = nn.BCELoss()
@@ -140,10 +147,27 @@ class ModelFineTuner:
         
         return best_val_acc
 
+    def save_model(self, model, model_name, params):
+        """Save model state and architecture parameters"""
+        save_dict = {
+            'state_dict': model.state_dict(),
+            'architecture': {
+                'input_dim': model.features[0].in_features,
+                'embed_dim': model.features[0].out_features,
+                'n_components': params.get('n_components', None)
+            }
+        }
+        torch.save(save_dict, f'./models/{model_name}_optimized.pth')
+
     def fine_tune(self):
         study = optuna.create_study(direction='maximize',
                                   pruner=optuna.pruners.MedianPruner())
         study.optimize(self.objective, n_trials=self.n_trials)
+        
+        # Save best model
+        input_dim = self.dataset[0][0].shape[1] * self.dataset[0][0].shape[0]
+        best_model = self.create_model(input_dim)
+        self.save_model(best_model, self.model_name, study.best_params)
         
         return study.best_params, study.best_value
 

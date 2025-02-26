@@ -27,11 +27,30 @@ class EnsembleModel(nn.Module):
 def load_model(model_name, input_dim, config_path, weights_path):
     """Load model with proper configuration and weights"""
     try:
-        config = joblib.load(config_path)
+        # Load weights with proper handling of nested state dict
+        checkpoint = torch.load(weights_path, map_location='cpu')
         
-        # Load weights with weights_only=True for security
-        state_dict = torch.load(weights_path, weights_only=True)
-        
+        # Get the state dict
+        if isinstance(checkpoint, dict):
+            if 'state_dict' in checkpoint:
+                state_dict = checkpoint['state_dict']
+            elif 'architecture' in checkpoint:
+                arch = checkpoint['architecture']
+                input_dim = arch['input_dim']
+                embed_dim = arch['embed_dim']
+                state_dict = checkpoint.get('state_dict', checkpoint)
+            else:
+                state_dict = checkpoint
+        else:
+            state_dict = checkpoint
+            
+        # Extract embed_dim from the state dict if not already set
+        if 'embed_dim' not in locals():
+            # Get embed_dim from the first layer's weight shape
+            first_layer_weight = next(key for key in state_dict.keys() if 'weight' in key)
+            embed_dim = state_dict[first_layer_weight].shape[0]
+            print(f"Extracted embed_dim={embed_dim} from weights")
+
         model_classes = {
             'linear': LinearRegressionNet,
             'logistic': LogisticRegressionNet,
@@ -44,23 +63,22 @@ def load_model(model_name, input_dim, config_path, weights_path):
             'pca': PCANet
         }
         
+        # Create model using extracted dimensions
         if model_name == 'pca':
-            # For PCA, we need to ensure n_components matches the saved weights
-            first_layer_size = next(iter(state_dict.values())).shape[1]
             model = model_classes[model_name](
                 input_dim=input_dim,
-                embed_dim=config['embed_dim'],
-                n_components=first_layer_size  # Use the size from saved weights
+                embed_dim=embed_dim,
+                n_components=embed_dim//2
             )
         else:
             model = model_classes[model_name](
                 input_dim=input_dim,
-                embed_dim=config['embed_dim']
+                embed_dim=embed_dim
             )
         
         # Load the state dict
         model.load_state_dict(state_dict)
-        print(f"Successfully loaded {model_name} model")
+        print(f"Successfully loaded {model_name} model with embed_dim={embed_dim}")
         return model
         
     except Exception as e:
@@ -255,8 +273,10 @@ def main():
     # Create and save best ensemble
     best_ensemble = EnsembleModel(best_models, device).to(device)
     best_ensemble.weights.data = torch.tensor(best_result['weights'], device=device)
+    
+    # Save complete ensemble with models
     torch.save({
-        'state_dict': best_ensemble.state_dict(),
+        'ensemble': best_ensemble,  # Save the complete ensemble
         'model_names': best_result['models'],
         'metrics': best_result['metrics'],
         'weights': best_result['weights']

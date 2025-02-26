@@ -1,0 +1,13 @@
+{
+    "model_uri": "runs:/288fdc71854442a0a95fdc6d9d84c95a/best_ensemble",
+    "endpoint": {
+        "name": "adhd_ensemble_endpoint",
+        "url": "sqlite:///C:\\Users\\Myles\\Documents\\Machine Learning\\Datasets Two\\Model_Training\\mlflow.db/api/2.0/preview/mlflow/model-versions/get-download-uri",
+        "model_name": "ADHD_BEST_ENSEMBLE",
+        "version": "1"
+    },
+    "serving_config": {
+        "max_batch_size": 16,
+        "timeout_seconds": 60
+    }
+}
