@@ -2,48 +2,48 @@ Model Fine-tuning Summary Report
 ==================================================
 
 Best Performing Model: LINEAR
-Score: 0.9167
+Score: 0.8333
 
 Most Improved Model: LOGISTIC
-Improvement: 0.2500
+Improvement: 0.0833
 
 Detailed Results:
 ------------------------------
 
 LINEAR:
 Original Score: 0.8889
-Fine-tuned Score: 0.9167
-Improvement: 0.0278
+Fine-tuned Score: 0.8333
+Improvement: -0.0556
 
 LOGISTIC:
 Original Score: 0.6667
-Fine-tuned Score: 0.9167
-Improvement: 0.2500
+Fine-tuned Score: 0.7500
+Improvement: 0.0833
 
 TREE:
 Original Score: 0.8889
-Fine-tuned Score: 0.6667
-Improvement: -0.2222
+Fine-tuned Score: 0.8333
+Improvement: -0.0556
 
 SVM:
 Original Score: 0.8889
-Fine-tuned Score: 0.6667
-Improvement: -0.2222
+Fine-tuned Score: 0.8333
+Improvement: -0.0556
 
 KNN:
 Original Score: 0.5556
-Fine-tuned Score: 0.3333
-Improvement: -0.2222
+Fine-tuned Score: 0.5833
+Improvement: 0.0278
 
 GBM:
 Original Score: 0.7778
-Fine-tuned Score: 0.7500
-Improvement: -0.0278
+Fine-tuned Score: 0.6667
+Improvement: -0.1111
 
 XGBOOST:
 Original Score: 0.6667
-Fine-tuned Score: 0.2500
-Improvement: -0.4167
+Fine-tuned Score: 0.5833
+Improvement: -0.0833
 
 NEURAL:
 Original Score: 0.6667
@@ -52,5 +52,5 @@ Improvement: 0.0000
 
 PCA:
 Original Score: 0.7778
-Fine-tuned Score: 0.9167
-Improvement: 0.1389
+Fine-tuned Score: 0.8333
+Improvement: 0.0556

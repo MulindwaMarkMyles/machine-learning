@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  flask_app:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - venv_data:/opt/venv # Persist virtual environment data
+    environment:
+      - FLASK_ENV=development
+      - VIRTUAL_ENV=/opt/venv
+      - PATH=/opt/venv/bin:$PATH
+
+volumes:
+  venv_data: # Define a named volume for the virtual environment

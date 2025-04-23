@@ -3,16 +3,13 @@ import numpy  as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch_directml
 from torch.utils.data import Dataset, DataLoader, random_split
 from scipy.io import loadmat
 from sklearn.preprocessing import RobustScaler
 import joblib
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from sklearn.decomposition import PCA
-import torch_xla
-import torch_xla.core.xla_model as xm  # XLA Model for TPU
-import torch_xla.distributed.parallel_loader as pl
-import torch_xla.utils.utils as xu
 
 class MATDataset(Dataset):
     def __init__(self, adhd_folder, control_folder, max_rows=None, transform=None):
@@ -262,8 +259,14 @@ class PCANet(BaseNetwork):
         # Convert to numpy for PCA
         x_numpy = x.cpu().detach().numpy()
         
-        # Fit PCA only once with the first batch
         if not self.fitted:
+            desired_n_components = self.pca.n_components
+            actual_n_components = min(x_numpy.shape[0], x_numpy.shape[1], desired_n_components)
+            if actual_n_components < desired_n_components:
+                print(f"Warning: PCA n_components={desired_n_components} is too large, reducing to {actual_n_components}")
+                self.pca = PCA(n_components=actual_n_components)
+                self.features[0] = nn.Linear(actual_n_components, self.embed_dim)
+                self.features.to(x.device)
             self.pca.fit(x_numpy)
             self.fitted = True
         
@@ -285,34 +288,31 @@ def train_epoch(model, teacher_model, dataloader, optimizer, device, criterion):
     running_loss = 0.0
     correct = 0
     total = 0
-
-    # Wrap DataLoader with ParallelLoader for TPU
-    para_loader = pl.MpDeviceLoader(dataloader, device)
-
-    for data, labels in para_loader:
+    
+    for data, labels in dataloader:
         data, labels = data.to(device), labels.to(device)
         optimizer.zero_grad()
-
+        
         outputs = model(data)
         teacher_outputs = teacher_model(data)
-
+        
+        # Combine BCE loss, knowledge distillation, and contrastive learning
         ce_loss = criterion(outputs.squeeze(), labels.float())
         kd_loss = nn.MSELoss()(outputs, teacher_outputs.detach())
         cont_loss = contrastive_loss(outputs, teacher_outputs.detach(), labels)
-
+        
+        # Weighted combination of losses
         loss = 0.5 * ce_loss + 0.3 * kd_loss + 0.2 * cont_loss
+        
         loss.backward()
-
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-
-        # Use TPU optimizer step
-        xm.optimizer_step(optimizer)
-
+        optimizer.step()
+        
         running_loss += loss.item()
         predicted = (outputs.squeeze() > 0.5).int()
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
-
+    
     return running_loss / len(dataloader), correct / total
 
 def validate(model, dataloader, criterion, device):
@@ -331,10 +331,7 @@ def validate(model, dataloader, criterion, device):
     return total_loss / len(dataloader), accuracy
 
 
-def train_model(model_name, model_class, dataset, device, teacher_embed_dim=1024, student_embed_dim=512):
-
-    os.makedirs("/kaggle/working/models/", exist_ok=True)
-    
+def train_model(model_name, model_class, dataset, device, teacher_embed_dim=512, student_embed_dim=256):
     # Create dataloaders
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
@@ -342,6 +339,7 @@ def train_model(model_name, model_class, dataset, device, teacher_embed_dim=1024
     
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+
     # Initialize models
     input_dim = dataset[0][0].shape[1] * dataset[0][0].shape[0]
     
@@ -356,7 +354,7 @@ def train_model(model_name, model_class, dataset, device, teacher_embed_dim=1024
         'max_rows': dataset.max_rows,
         'num_features': dataset[0][0].shape[1]
     }
-    joblib.dump(model_config, f"/kaggle/working/models/{model_name}_config.pkl")
+    joblib.dump(model_config, f"./models/{model_name}_config.pkl")
 
     optimizer = optim.AdamW(student_model.parameters(), lr=0.001, weight_decay=0.01)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
@@ -375,7 +373,7 @@ def train_model(model_name, model_class, dataset, device, teacher_embed_dim=1024
         
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            torch.save(student_model.state_dict(), f"/kaggle/working/models/{model_name}_best.pth")
+            torch.save(student_model.state_dict(), f"./models/{model_name}_best.pth")
             print(f"New best model saved with validation accuracy: {val_acc:.4f}")
         
         print(f"Epoch {epoch+1}/{num_epochs}")
@@ -383,22 +381,21 @@ def train_model(model_name, model_class, dataset, device, teacher_embed_dim=1024
         print(f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
 
     # Save final model and scaler
-    torch.save(student_model.state_dict(), f"/kaggle/working/models/{model_name}_final.pth")
-    joblib.dump(dataset.scaler, f"/kaggle/working/models/{model_name}_scaler.pkl")
+    torch.save(student_model.state_dict(), f"./models/{model_name}_final.pth")
+    joblib.dump(dataset.scaler, f"./models/{model_name}_scaler.pkl")
     
     return best_val_acc
 
 if __name__ == "__main__":
     # Setup paths and dataset
-    adhd_folder = "/kaggle/input/adhd-dataset/ADHD_part2/ADHD_part2"
-    control_folder = "/kaggle/input/adhd-dataset/Control_part2/Control_part2"
+    adhd_folder = "../ADHD_part2/ADHD_part2"
+    control_folder = "../Control_part2/Control_part2"
     
     transform = DataAugmentation(noise_level=0.05, dropout_prob=0.1)
     dataset = MATDataset(adhd_folder, control_folder, transform=transform)
     
     # Setup device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # device = xm.xla_device()
     
     # Dictionary of models to train
     models = {

@@ -265,22 +265,24 @@ def main():
             print("Models:", ', '.join(result['models']))
             print("Weights:", ', '.join([f"{w:.3f}" for w in result['weights']]))
     
-    # Save best combination by F1 score
-    best_result = results['by_f1'][0]
-    best_indices = [model_names.index(name) for name in best_result['models']]
-    best_models = [models[i] for i in best_indices]
-    
-    # Create and save best ensemble
-    best_ensemble = EnsembleModel(best_models, device).to(device)
-    best_ensemble.weights.data = torch.tensor(best_result['weights'], device=device)
-    
-    # Save complete ensemble with models
-    torch.save({
-        'ensemble': best_ensemble,  # Save the complete ensemble
-        'model_names': best_result['models'],
-        'metrics': best_result['metrics'],
-        'weights': best_result['weights']
-    }, './models/best_ensemble_combination.pth')
+    # Save best and worst combinations
+    for result_type in ['best', 'worst']:
+        for i in range(2):  # Save top/bottom 2 models
+            current_result = results['by_f1'][i] if result_type == 'best' else results['by_f1'][-i-1]
+            current_indices = [loaded_model_names.index(name) for name in current_result['models']]
+            current_models = [models[i] for i in current_indices]
+            
+            # Create and save ensemble
+            current_ensemble = EnsembleModel(current_models, device).to(device)
+            current_ensemble.weights.data = torch.tensor(current_result['weights'], device=device)
+            
+            # Save complete ensemble
+            torch.save({
+                'ensemble': current_ensemble,
+                'model_names': current_result['models'],
+                'metrics': current_result['metrics'],
+                'weights': current_result['weights']
+            }, f'./models/{result_type}_ensemble_combination_{i+1}.pth')
     
     # Save all results
     with open('./models/ensemble_combinations_results.json', 'w') as f:
