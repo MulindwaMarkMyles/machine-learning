@@ -99,10 +99,3 @@ streamlit run interface.py
 - Verify CUDA availability for GPU training
 - Monitor memory usage for large batch processing
 
-### 📝 License
-
-[Insert License Information]
-
-### 👥 Contributors
-
-[Insert Contributors Information]
